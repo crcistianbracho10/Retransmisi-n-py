@@ -1,85 +1,78 @@
-import os
-import subprocess
-import threading
-import time
 import streamlit as st
+import subprocess
+import time
 
-# Configuración de la interfaz de Streamlit
-st.set_page_config(page_title="Retransmisor RTMP", layout="centered")
+# Configuración de la página
+st.set_page_config(page_title="Relay HLS a RTMP", layout="wide")
 
-st.title("🚀 Retransmisor RTMP Activo (24/7)")
-st.write("El motor de retransmisión se está ejecutando en segundo plano hacia BozzTV en modo copia.")
+st.title("📡 Retransmisión de Señal (Stream Copy)")
+st.caption("Reenvío de señal sin consumo de CPU ni recodificación mediante FFmpeg (-c copy).")
 
-# Configuración de accesos y destinos
-STREAM_URL = "https://cristianbracho904.blitz.cloud/hls/index.m3u8"
-RTMP_DEST = "rtmp://ssh101.bozztv.com:1935/ssh101/canalczulia"
+# URLs predeterminadas por defecto
+DEFAULT_HLS = "https://cristianbracho904.blitz.cloud/hls/index.m3u8"
+DEFAULT_RTMP = "rtmp://ssh101.bozztv.com:1935/ssh101/canalczulia"
 
-# Estado en la interfaz
-if "estado" not in st.session_state:
-    st.session_state.estado = "Iniciando conexión..."
+# Inicializar estados en session_state
+if "process" not in st.session_state:
+    st.session_state.process = None
 
-status_placeholder = st.empty()
+col1, col2 = st.columns(2)
 
-# ==========================================
-# 🎬 MOTOR DE TRANSMISIÓN EN SEGUNDO PLANO
-# ==========================================
-def iniciar_retransmision():
-    while True:
-        try:
-            print("🎬 [RTMP] Copiando señal directamente sin transcodificar...")
-            st.session_state.estado = "Transmitiendo en vivo (Modo Copia)"
-            
-            args = [
-                'ffmpeg',
-                '-reconnect', '1',
-                '-reconnect_streamed', '1',
-                '-reconnect_delay_max', '5',
-                '-fflags', '+genpts+igndts',
-                '-i', STREAM_URL,
-                '-c:v', 'copy',
-                '-c:a', 'copy',
-                '-f', 'flv',
-                RTMP_DEST
+with col1:
+    source_url = st.text_input("Señal Origen (HLS .m3u8)", value=DEFAULT_HLS)
+
+with col2:
+    rtmp_url = st.text_input("Destino RTMP", value=DEFAULT_RTMP)
+
+# Controladores
+c1, c2, c3 = st.columns([1, 1, 2])
+
+with c1:
+    if st.button("▶️ Iniciar Retransmisión", type="primary"):
+        if st.session_state.process is not None and st.session_state.process.poll() is None:
+            st.warning("La retransmisión ya está en ejecución.")
+        else:
+            # Comando FFmpeg con copia directa de códec (-c copy)
+            command = [
+                "ffmpeg",
+                "-re",
+                "-i", source_url,
+                "-c", "copy",
+                "-f", "flv",
+                rtmp_url
             ]
-            
-            proceso = subprocess.Popen(args, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
-            
-            ultimo_frame = time.time()
-            
-            def monitor_stderr():
-                nonlocal ultimo_frame
-                for line in proceso.stderr:
-                    if "frame=" in line or "size=" in line:
-                        ultimo_frame = time.time()
-            
-            monitor_thread = threading.Thread(target=monitor_stderr, daemon=True)
-            monitor_thread.start()
-            
-            # Watchdog: Si pasan más de 15 segundos sin frames, reinicia el proceso
-            while proceso.poll() is None:
-                if time.time() - ultimo_frame > 15:
-                    print("⚠️ [Watchdog] La señal se congeló. Reiniciando proceso...")
-                    st.session_state.estado = "Reiniciando por señal congelada..."
-                    proceso.kill()
-                    break
-                time.sleep(2)
-                
-            proceso.wait()
-        except Exception as e:
-            print(f"❌ Error: {e}")
-            st.session_state.estado = f"Error: {e}"
-            
-        print("⚠️ [RTMP] Proceso cerrado. Reintentando en 3 segundos...")
-        time.sleep(3)
+            try:
+                # Iniciamos el proceso en segundo plano
+                st.session_state.process = subprocess.Popen(
+                    command,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE
+                )
+                st.success("Transmisión iniciada correctamente.")
+            except Exception as e:
+                st.error(f"Error al iniciar FFmpeg: {e}")
 
-# Iniciar el hilo de retransmisión una sola vez al cargar la app
-if "hilo_iniciado" not in st.session_state:
-    st.session_state.hilo_iniciado = True
-    hilo_streaming = threading.Thread(target=iniciar_retransmision, daemon=True)
-    hilo_streaming.start()
+with c2:
+    if st.button("⏹️ Detener Retransmisión"):
+        if st.session_state.process is not None:
+            st.session_state.process.terminate()
+            st.session_state.process = None
+            st.info("Transmisión detenida.")
+        else:
+            st.warning("No hay ninguna transmisión activa.")
 
-# Mostrar estado en pantalla
-status_placeholder.info(f"**Estado actual:** {st.session_state.estado}")
+# Monitoreo de estado
+st.subheader("Estado del Proceso")
 
-st.markdown("---")
-st.write("💡 *Nota: Mantén esta pestaña de Streamlit abierta o asegúrate de que tu app no entre en modo 'Sleep' por inactividad si tu cuenta es gratuita.*")
+if st.session_state.process is not None:
+    poll_status = st.session_state.process.poll()
+    if poll_status is None:
+        st.success("🟢 Transmitiendo en vivo (Proceso activo en segundo plano)")
+    else:
+        st.error(f"🔴 El proceso se ha detenido inesperadamente (Código de salida: {poll_status})")
+        # Mostrar las últimas líneas de error si fallo
+        _, stderr_data = st.session_state.process.communicate()
+        if stderr_data:
+            st.code(stderr_data.decode("utf-8", errors="ignore")[-1000:])
+else:
+    st.info("⚪ Detenido")
