@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 SOURCE = "https://cristianbracho904.blitz.cloud/hls/index.m3u8"
-DESTINATION = "rtmp://ssh101.bozz.com/ssh101/canalczulia"
+DESTINATION = "rtmp://ssh101.bozztv.com/ssh101/canalczulia"
 LOG_FILE = "/tmp/canal_c_ffmpeg.log"
 
 
