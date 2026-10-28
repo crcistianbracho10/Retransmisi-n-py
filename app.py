@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered",
 )
 
-SOURCE = "https://cristianbracho904.blitz.cloud/hls/index.m3u8"
+SOURCE = "https://emision-master.dockhosting.dev/hls/index.m3u8"
 DESTINATION = "rtmp://ssh101.bozztv.com/ssh101/canalczulia"
 LOG_FILE = "/tmp/canal_c_ffmpeg.log"
 
