@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered",
 )
 
-SOURCE = "https://lbgo.bozztv.com/ssh101/ssh101/"
+SOURCE = "https://emision-master.dockhosting.dev/hls/index.m3u8"
 DESTINATION = "rtmp://a.rtmp.youtube.com/live2/wr4f-kh3x-84ra-0gb8-861e"
 LOG_FILE = "/tmp/canal_c_ffmpeg.log"
 
