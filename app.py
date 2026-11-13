@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 SOURCE = "https://lbgo.bozztv.com/ssh101/ssh101/canalczulia"
-DESTINATION = "rtmp://a.rtmp.youtube.com/live2/wr4f-kh3x-84ra-0gb8-861e"
+DESTINATION = "rtmp://ssh101.bozztv.com:1935/ssh101/canalczulia"
 LOG_FILE = "/tmp/canal_c_ffmpeg.log"
 
 
