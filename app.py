@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered",
 )
 
-SOURCE = "https://lbgo.bozztv.com/ssh101/ssh101/canalczulia"
+SOURCE = "https://streamastudios.com/hls/sk_uB4bJlw8E-des5C5.m3u8"
 DESTINATION = "rtmp://ssh101.bozztv.com:1935/ssh101/canalczulia"
 LOG_FILE = "/tmp/canal_c_ffmpeg.log"
 
