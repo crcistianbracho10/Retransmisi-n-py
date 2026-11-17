@@ -12,8 +12,8 @@ st.set_page_config(
     layout="centered",
 )
 
-SOURCE = "https://streamastudios.com/hls/sk_uB4bJlw8E-des5C5.m3u8"
-DESTINATION = "rtmp://ssh101.bozztv.com:1935/ssh101/canalczulia"
+SOURCE = "https://183.giatvcdn.com/ssh101/ssh101/canalcevent484/playlist.m3u8"
+DESTINATION = "rtmp://ssh101.live.opencaster.com/opencaster/cristianhilos_314b91b0?psk=cristianhilos_314b91b0&tk=b77f89cbf4f83af5295e37a562a3379de814c3a945e7402811a589c00d91f442"
 LOG_FILE = "/tmp/canal_c_ffmpeg.log"
 
 
